@@ -2,14 +2,20 @@
  * Grab the pellets as fast as you can!
  **/
 
+enum Side { LEFT = 'left', RIGHT = 'right' }
+enum Direction {
+    UP = 'up',
+    DOWN = 'down',
+    LEFT = 'left',
+    RIGHT = 'right'
+}
+
 interface Pellet {
     x: number // position in the grid
     y: number
     value: number // 1 or 10 (super pellet)
     side?: Side
 }
-
-enum Side { LEFT = 'left', RIGHT = 'right' }
 
 interface Pac {
     pacId: number
@@ -21,6 +27,7 @@ interface Pac {
     abilityCooldown: number // unused in wood leagues
     targetPellet?: Pellet
     side?: Side
+    direction?: Direction
 }
 
 
