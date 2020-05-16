@@ -71,7 +71,6 @@ while (true) {
 
     const calculateDirection = (pac: Pac, pellet: Pellet): any => {
         const vector = calculateVector(pac.x, pac.y, pellet.x, pellet.y)
-        console.error(vector)
         return {
             x: vector.x > 0 ? Direction.RIGHT : Direction.LEFT,
             y: vector.y > 0 ? Direction.DOWN : Direction.UP,
@@ -110,13 +109,20 @@ while (true) {
         pellets.push(pellet)
     }
 
+
+
     const getSuperPellets = (pellets: Pellet[]) => {
         return pellets.filter(x => x.value == 10)
     }
 
     const getNextPellet = () => {
         if (getSuperPellets(pellets).length > 0) {
-            return getSuperPellets(pellets).pop() as Pellet
+            const lastSuperPellet = getSuperPellets(pellets).pop() as Pellet
+            const index = pellets.indexOf(lastSuperPellet);
+            if (index > -1) {
+                pellets.splice(index, 1);
+            }
+            return lastSuperPellet
         } else {
             return pellets.pop()
         }
