@@ -110,12 +110,18 @@ while (true) {
     }
 
 
-
     const getSuperPellets = (pellets: Pellet[]) => {
         return pellets.filter(x => x.value == 10)
     }
 
-    const getNextPellet = () => {
+    const superPeletsCount = getSuperPellets(pellets).length
+
+    const getNextPellet = (): Pellet => {
+
+        if (superPeletsCount === 1) {
+            return getSuperPellets(pellets)[0] as Pellet
+        }
+
         if (getSuperPellets(pellets).length > 0) {
             const lastSuperPellet = getSuperPellets(pellets).pop() as Pellet
             const index = pellets.indexOf(lastSuperPellet);
@@ -124,7 +130,7 @@ while (true) {
             }
             return lastSuperPellet
         } else {
-            return pellets.pop()
+            return pellets.pop() as Pellet
         }
     }
 
@@ -136,6 +142,43 @@ while (true) {
     }
 
 
+    const findConflictedPacs = (pac:Pac): Pac[] => {
+        return currentPacs
+            // .filter(item => item.pacId != pac.pacId) // remove original to compare to
+            .filter(item => {
+                return pac.x <= item.x+1 && pac.x >= item.x-1 && pac.y <= item.y+1 && pac.y >= item.y-1
+            })
+    }
+
+    const findPelletInOppositeDirection = (pac: Pac): Pellet => {
+        let condition: any
+
+        switch (pac.direction) {
+            case { x: Direction.RIGHT, y: Direction.UP }:
+                condition = (item: Pac) => item.x < pac.x && item.y > pac.y
+                break;
+            case { x: Direction.LEFT, y: Direction.DOWN }:
+                condition = (item: Pac) => item.x > pac.x && item.y < pac.y
+                break;
+            default:
+                return getNextPellet()
+        }
+
+
+        if (getSuperPellets(pellets.filter(condition)).length > 0) {
+            const lastSuperPellet = getSuperPellets(pellets.filter(condition)).pop() as Pellet
+            const index = pellets.indexOf(lastSuperPellet);
+            if (index > -1) {
+                pellets.splice(index, 1);
+            }
+            return lastSuperPellet
+        } else {
+            return pellets.filter(condition).pop() as Pellet
+        }
+
+
+    }
+
     pacs
         .filter(pac => pac.mine)
         .forEach(pac => {
@@ -145,11 +188,11 @@ while (true) {
                 output += ` | `
             }
             if (isSamePosition(pac)) {
-                console.error('same position')
-                console.error(currentPacs)
-                for (let i; i < Math.random()*2; i++) {
+                // currentPellet = findPelletInOppositeDirection(pac)
+                // console.error(findConflictedPacs(pac))
+                [...Array(3)].forEach(() => {
                     currentPellet = getNextPellet()
-                }
+                })
             }
 
             output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${currentPellet.side}`
