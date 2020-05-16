@@ -147,13 +147,12 @@ while (true) {
             if (isSamePosition(pac)) {
                 console.error('same position')
                 console.error(currentPacs)
-                for (let i; i < Math.random()*5; i++) {
+                for (let i; i < Math.random()*2; i++) {
                     currentPellet = getNextPellet()
                 }
             }
+
             output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${currentPellet.side}`
-
-
 
             currentPacs[pac.pacId] = {
                 ...pac,
