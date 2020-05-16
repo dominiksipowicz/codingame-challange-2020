@@ -10,6 +10,11 @@ enum Direction {
     RIGHT = 'right'
 }
 
+interface Point {
+    x: number
+    y: number
+}
+
 interface Pellet {
     x: number // position in the grid
     y: number
@@ -27,15 +32,20 @@ interface Pac {
     abilityCooldown: number // unused in wood leagues
     targetPellet?: Pellet
     side?: Side
-    direction?: Direction
+    direction?: {
+        x: Direction.LEFT | Direction.RIGHT
+        y: Direction.UP | Direction.DOWN
+    }
 }
 
 
 var inputs: string[] = readline().split(' ');
 const width: number = parseInt(inputs[0]); // size of the grid
 const height: number = parseInt(inputs[1]); // top left corner is (x=0, y=0)
+const map: string[] = []
 for (let i = 0; i < height; i++) {
     const row: string = readline(); // one line of the grid: space " " is floor, pound "#" is wall
+    map.push(row)
 }
 
 let currentPellet: Pellet
@@ -50,6 +60,22 @@ while (true) {
 
     const calculateSide = (x:number): Side => {
         return Math.round(x/width) ? Side.RIGHT : Side.LEFT
+    }
+
+    const calculateVector = (x1 ,y1, x2, y2): Point => {
+        return {
+            x: x2 - x1,
+            y: y2 - y1
+        }
+    }
+
+    const calculateDirection = (pac: Pac, pellet: Pellet): any => {
+        const vector = calculateVector(pac.x, pac.y, pellet.x, pellet.y)
+        console.error(vector)
+        return {
+            x: vector.x > 0 ? Direction.RIGHT : Direction.LEFT,
+            y: vector.y > 0 ? Direction.DOWN : Direction.UP,
+        }
     }
 
     let pacs: Pac[] = []
@@ -123,7 +149,12 @@ while (true) {
 
 
 
-            currentPacs[pac.pacId] = {...pac, targetPellet: currentPellet}
+            currentPacs[pac.pacId] = {
+                ...pac,
+                targetPellet: currentPellet,
+                side: calculateSide(pac.x),
+                direction: calculateDirection(pac, currentPellet)
+            }
         })
 
     console.log(output)
