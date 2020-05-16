@@ -38,7 +38,6 @@ interface Pac {
     }
 }
 
-
 var inputs: string[] = readline().split(' ');
 const width: number = parseInt(inputs[0]); // size of the grid
 const height: number = parseInt(inputs[1]); // top left corner is (x=0, y=0)
@@ -67,6 +66,10 @@ while (true) {
             x: x2 - x1,
             y: y2 - y1
         }
+    }
+
+    const calculateVectorLength = (point: Point): number => {
+        return Math.sqrt(point.x * point.x + point.y * point.y);
     }
 
     const calculateDirection = (pac: Pac, pellet: Pellet): any => {
@@ -109,13 +112,13 @@ while (true) {
         pellets.push(pellet)
     }
 
-
     const getSuperPellets = (pellets: Pellet[]) => {
         return pellets.filter(x => x.value == 10)
     }
 
     const superPeletsCount = getSuperPellets(pellets).length
 
+    // !!!!!!! remove or refactor later
     const getNextPellet = (): Pellet => {
 
         if (superPeletsCount === 1) {
@@ -134,13 +137,31 @@ while (true) {
         }
     }
 
+    // !!!!!!! remove or refactor later
+    const getNextPelletV2 = (individualPacPellets: Pellet[]): Pellet => {
+
+        if (superPeletsCount === 1) {
+            return getSuperPellets(pellets)[0] as Pellet
+        }
+
+        if (getSuperPellets(individualPacPellets).length > 0) {
+            const lastSuperPellet = getSuperPellets(individualPacPellets)[0] as Pellet
+            const index = pellets.indexOf(lastSuperPellet);
+            if (index > -1) {
+                pellets.splice(index, 1);
+            }
+            return lastSuperPellet
+        } else {
+            return individualPacPellets.shift() as Pellet
+        }
+    }
+
     let output: string = ''
 
     const isSamePosition = pac => {
         if (!currentPacs || currentPacs.length === 0 || !currentPacs[pac.pacId]) return false
         return pac.x === currentPacs[pac.pacId].x && pac.y === currentPacs[pac.pacId].y
     }
-
 
     const findConflictedPacs = (pac:Pac): Pac[] => {
         return currentPacs
@@ -179,10 +200,30 @@ while (true) {
 
     }
 
+/*
+ * STRATEGY:
+ *      - collect super pellets first
+ *      - calculate distance per pac
+ *      - collect the nearest pellets
+ *      - if conflict use:
+ *          - random
+ *          - opposite direction
+ */
+
     pacs
         .filter(pac => pac.mine)
         .forEach(pac => {
-            currentPellet = getNextPellet()
+
+            // sorting pellets by distance between current pac and pellets
+            const sortedPelletsPerPac: Pellet[] = [...pellets].sort((a: Pellet, b: Pellet) => {
+                const lengthA = calculateVectorLength(calculateVector(a.x, a.y, pac.x, pac.y))
+                const lengthB = calculateVectorLength(calculateVector(b.x, b.y, pac.x, pac.y))
+                return lengthA - lengthB
+            })
+
+            currentPellet = getNextPelletV2(sortedPelletsPerPac)
+
+            // currentPellet = getNextPellet()
 
             if (output.length > 1) {
                 output += ` | `
@@ -206,10 +247,5 @@ while (true) {
         })
 
     console.log(output)
-
-
-    // Write an action using console.log()
-    // To debug: console.error('Debug messages...');
-
 
 }
