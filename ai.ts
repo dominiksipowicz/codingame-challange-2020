@@ -303,6 +303,18 @@ while (true) {
                     const winingType: TypeId = getKillType(pac.nearOpponentPac.typeId)
                     if (pac.typeId === winingType) {
                         output += `MOVE ${pac.pacId} ${pac.nearOpponentPac.x} ${pac.nearOpponentPac.y} attack`
+
+                        // check for situation where pac atack phantom enemy pac
+                        if (
+                            currentPacs[pac.pacId].x === pac.nearOpponentPac.x
+                            && currentPacs[pac.pacId].y === pac.nearOpponentPac.y
+                            && pac.x === pac.nearOpponentPac.x
+                            && pac.y === pac.nearOpponentPac.y
+                        ) {
+                            opponentPacs = opponentPacs.filter(item => item.pacId !== pac.nearOpponentPac.pacId)
+                        }
+
+
                     } else {
                         output += `SWITCH ${pac.pacId} ${winingType}`
                     }
@@ -330,7 +342,7 @@ while (true) {
             // console.error(findConflictedPacs(pac).map(x => ({...x, history: []})))
         })
 
-     console.error(currentPacs.map(x => ({...x, history: []})))
+    //  console.error(currentPacs.map(x => ({...x, history: []})))
 
     // // print maze
     // cleanMazeBasedOnPacsHistory()
