@@ -233,6 +233,18 @@ while (true) {
                 //     currentPellet = getNextPellet(sortedPelletsPerPac)
                 // })
                 currentPellet = getNextPelletFromMaze(pac)
+
+                const conflictedPac = findConflictedPacs(pac).filter(item => item.mine).shift()
+
+                if ( // in case the direction is still opposite (conflicting) choose same pellet
+                    conflictedPac.direction.x !== calculateDirection(pac, currentPellet).x ||
+                    conflictedPac.direction.y !== calculateDirection(pac, currentPellet).y
+                ) {
+                    currentPellet = conflictedPac.targetPellet
+                }
+
+                // console.error(findConflictedPacs(pac).map(x => ({...x, history: []})))
+
             }
 
             if (pac.speedTurnsLeft === 0 && pac.abilityCooldown === 0) {
@@ -252,14 +264,18 @@ while (true) {
                 direction: calculateDirection(pac, currentPellet),
                 history: [...history, {x: pac.x, y: pac.y }]
             }
+
+            // console.error(findConflictedPacs(pac).map(x => ({...x, history: []})))
         })
 
-     console.error(currentPacs.map(x => ({...x, history: []})))
+    //  console.error(currentPacs.map(x => ({...x, history: []})))
 
     // // print maze
     // cleanMazeBasedOnPacsHistory()
     // map.forEach(i => console.error(i))
 
     console.log(output)
+
+
 
 }
