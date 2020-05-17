@@ -27,7 +27,7 @@ interface Pac {
     mine: boolean // true if this pac is yours
     x: number // position in the grid
     y: number
-    typeId: string // unused in wood leagues
+    typeId: string | 'ROCK' | 'PAPER' | 'SCISSORS'  // unused in wood leagues
     speedTurnsLeft: number // unused in wood leagues
     abilityCooldown: number // unused in wood leagues
     targetPellet?: Pellet
@@ -45,7 +45,10 @@ const map: string[] = []
 for (let i = 0; i < height; i++) {
     const row: string = readline(); // one line of the grid: space " " is floor, pound "#" is wall
     map.push(row)
+    console.error(row)
 }
+
+
 
 let currentPellet: Pellet
 let currentPacs: Pac[] = []
@@ -118,28 +121,18 @@ while (true) {
 
     const superPeletsCount = getSuperPellets(pellets).length
 
-    // !!!!!!! remove or refactor later
-    const getNextPellet = (): Pellet => {
+    const getNextPellet = (individualPacPellets: Pellet[]): Pellet => {
 
-        if (superPeletsCount === 1) {
-            return getSuperPellets(pellets)[0] as Pellet
-        }
-
-        if (getSuperPellets(pellets).length > 0) {
-            const lastSuperPellet = getSuperPellets(pellets).pop() as Pellet
-            const index = pellets.indexOf(lastSuperPellet);
-            if (index > -1) {
-                pellets.splice(index, 1);
+        // no pellets visible
+        if (individualPacPellets.length === 0) {
+            return {
+                x: 1,
+                y: 1,
+                value: 5 // dummy
             }
-            return lastSuperPellet
-        } else {
-            return pellets.pop() as Pellet
         }
-    }
 
-    // !!!!!!! remove or refactor later
-    const getNextPelletV2 = (individualPacPellets: Pellet[]): Pellet => {
-
+        // first super pellets priority so if one left - jump all on it
         if (superPeletsCount === 1) {
             return getSuperPellets(pellets)[0] as Pellet
         }
@@ -171,35 +164,6 @@ while (true) {
             })
     }
 
-    const findPelletInOppositeDirection = (pac: Pac): Pellet => {
-        let condition: any
-
-        switch (pac.direction) {
-            case { x: Direction.RIGHT, y: Direction.UP }:
-                condition = (item: Pac) => item.x < pac.x && item.y > pac.y
-                break;
-            case { x: Direction.LEFT, y: Direction.DOWN }:
-                condition = (item: Pac) => item.x > pac.x && item.y < pac.y
-                break;
-            default:
-                return getNextPellet()
-        }
-
-
-        if (getSuperPellets(pellets.filter(condition)).length > 0) {
-            const lastSuperPellet = getSuperPellets(pellets.filter(condition)).pop() as Pellet
-            const index = pellets.indexOf(lastSuperPellet);
-            if (index > -1) {
-                pellets.splice(index, 1);
-            }
-            return lastSuperPellet
-        } else {
-            return pellets.filter(condition).pop() as Pellet
-        }
-
-
-    }
-
 /*
  * STRATEGY:
  *      - collect super pellets first
@@ -221,7 +185,7 @@ while (true) {
                 return lengthA - lengthB
             })
 
-            currentPellet = getNextPelletV2(sortedPelletsPerPac)
+            currentPellet = getNextPellet(sortedPelletsPerPac)
 
             // currentPellet = getNextPellet()
 
@@ -229,13 +193,13 @@ while (true) {
                 output += ` | `
             }
             if (isSamePosition(pac)) {
-                // currentPellet = findPelletInOppositeDirection(pac)
                 // console.error(findConflictedPacs(pac))
                 [...Array(3)].forEach(() => {
-                    currentPellet = getNextPellet()
+                    currentPellet = getNextPellet(sortedPelletsPerPac)
                 })
             }
 
+            console.error(currentPellet)
             output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${currentPellet.side}`
 
             currentPacs[pac.pacId] = {
@@ -245,6 +209,8 @@ while (true) {
                 direction: calculateDirection(pac, currentPellet)
             }
         })
+
+     console.error(currentPacs)
 
     console.log(output)
 
