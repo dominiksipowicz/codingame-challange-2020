@@ -199,8 +199,15 @@ while (true) {
                 })
             }
 
-            console.error(currentPellet)
-            output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${currentPellet.side}`
+            // console.error(currentPellet)
+
+            if (pac.speedTurnsLeft === 0) {
+                output += `SPEED ${pac.pacId}`
+            } else {
+                output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${currentPellet.side}`
+            }
+
+
 
             currentPacs[pac.pacId] = {
                 ...pac,
