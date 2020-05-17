@@ -118,8 +118,10 @@ while (true) {
     }
 
     const getNextPelletFromMaze = (pac: Pac): Pellet => {
-        const side: Side = (pac.pacId % 2 === 0) ? Side.LEFT : Side.RIGHT
 
+        cleanMazeBasedOnPacsHistory()
+
+        const side: Side = (pac.pacId % 2 === 0) ? Side.LEFT : Side.RIGHT
 
         let point: Pellet;
 
@@ -162,15 +164,6 @@ while (true) {
     const superPeletsCount = getSuperPellets(pellets).length
 
     const getNextPellet = (individualPacPellets: Pellet[]): Pellet => {
-
-        // no pellets visible
-        if (individualPacPellets.length === 0) {
-            return {
-                x: 1,
-                y: 1,
-                value: 5 // dummy
-            }
-        }
 
         // first super pellets priority so if one left - jump all on it
         if (superPeletsCount === 1) {
@@ -225,9 +218,11 @@ while (true) {
                 return lengthA - lengthB
             })
 
-            currentPellet = getNextPellet(sortedPelletsPerPac)
-
-            // currentPellet = getNextPellet()
+            if (sortedPelletsPerPac.length === 0) {
+                currentPellet = getNextPelletFromMaze(pac)
+            } else {
+                currentPellet = getNextPellet(sortedPelletsPerPac)
+            }
 
             if (output.length > 1) {
                 output += ` | `
@@ -237,11 +232,8 @@ while (true) {
                 // [...Array(3)].forEach(() => {
                 //     currentPellet = getNextPellet(sortedPelletsPerPac)
                 // })
-                cleanMazeBasedOnPacsHistory()
                 currentPellet = getNextPelletFromMaze(pac)
             }
-
-            // console.error(currentPellet)
 
             if (pac.speedTurnsLeft === 0 && pac.abilityCooldown === 0) {
                 output += `SPEED ${pac.pacId}`
@@ -262,7 +254,7 @@ while (true) {
             }
         })
 
-     console.error(currentPacs)
+     console.error(currentPacs.map(x => ({...x, history: []})))
 
     // // print maze
     // cleanMazeBasedOnPacsHistory()
