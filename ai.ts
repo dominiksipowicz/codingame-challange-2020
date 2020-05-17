@@ -224,12 +224,10 @@ while (true) {
 
     const attack = (pac: Pac): string => {
         // check for situation where pac atack phantom enemy pac
-        if (
-            currentPacs[pac.pacId].x === pac.nearOpponentPac.x
-            && currentPacs[pac.pacId].y === pac.nearOpponentPac.y
-            && pac.x === pac.nearOpponentPac.x
-            && pac.y === pac.nearOpponentPac.y
-        ) {
+        const vector = calculateVector(pac.x, pac.y, pac.nearOpponentPac.x, pac.nearOpponentPac.y)
+
+        if (isSamePosition(pac) && calculateVectorLength(vector) <= 2) {
+            console.error('fantom')
             opponentPacs = opponentPacs.filter(item => item.pacId !== pac.nearOpponentPac.pacId)
         }
         return `MOVE ${pac.pacId} ${pac.nearOpponentPac.x} ${pac.nearOpponentPac.y} attack`
@@ -237,15 +235,15 @@ while (true) {
 
     const runAway = (pac: Pac, from: any, returnPoint = false): string|Point => {
         const direction = calculateDirection(pac, from)
-        let newX = direction.x === Direction.LEFT ? (pac.x - 3) : (pac.x + 3)
-        let newY = direction.y === Direction.LEFT ? (pac.y - 3) : (pac.y + 3)
+        let newX = direction.x === Direction.LEFT ? (pac.x + 3) : (pac.x - 3) // TODO: double check
+        let newY = direction.y === Direction.DOWN ? (pac.y - 3) : (pac.y + 3)
 
         if (newX < 1) newX = 1
         if (newY < 1) newY = 1
         if (newX >= width) newX = width  - 1
         if (newY >= height) newY = height - 2
 
-        console.error('runaway pac: ' + pac.pacId + ` ${newX} ${newY}  ${returnPoint}`)
+        // console.error('runaway pac: ' + pac.pacId + `${direction.y} ${newX} ${newY}  ${returnPoint}`)
         if (returnPoint) {
             return { x: newX, y: newY }
         }
