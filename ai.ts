@@ -243,7 +243,7 @@ while (true) {
 
             // console.error(currentPellet)
 
-            if (pac.speedTurnsLeft === 0) {
+            if (pac.speedTurnsLeft === 0 && pac.abilityCooldown === 0) {
                 output += `SPEED ${pac.pacId}`
             } else {
                 output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${currentPellet.side}`
@@ -262,7 +262,7 @@ while (true) {
             }
         })
 
-    //  console.error(currentPacs)
+     console.error(currentPacs)
 
     // // print maze
     // cleanMazeBasedOnPacsHistory()
