@@ -199,8 +199,6 @@ while (true) {
         }
     }
 
-    let output: string = ''
-
     const isSamePosition = pac => {
         if (!currentPacs || currentPacs.length === 0 || !currentPacs[pac.pacId]) return false
         return pac.x === currentPacs[pac.pacId].x && pac.y === currentPacs[pac.pacId].y
@@ -214,6 +212,15 @@ while (true) {
             })
     }
 
+    const getKillType = (typeId: TypeId): TypeId => {
+        switch(typeId) {
+            case 'ROCK': return 'PAPER'
+            case 'PAPER': return 'SCISSORS'
+            case 'SCISSORS': return 'ROCK'
+            default: return 'ROCK'
+        }
+    }
+
 /*
  * STRATEGY:
  *      - collect super pellets first
@@ -223,6 +230,9 @@ while (true) {
  *          - random
  *          - opposite direction
  */
+
+    let output: string = ''
+    let outputComment: string = ''
 
     pacs
         .filter(pac => pac.mine)
@@ -237,6 +247,7 @@ while (true) {
 
             if (sortedPelletsPerPac.length === 0) {
                 currentPellet = getNextPelletFromMaze(pac)
+                outputComment = `maze` // mark pac it use maze for finsing pellet
             } else {
                 currentPellet = getNextPellet(sortedPelletsPerPac)
             }
@@ -293,16 +304,6 @@ while (true) {
                 // check for opponent pacs
                 // morph & attack :)
 
-                const getKillType = (typeId: TypeId): TypeId => {
-                    switch(typeId) {
-                        case 'ROCK': return 'PAPER'
-                        case 'PAPER': return 'SCISSORS'
-                        case 'SCISSORS': return 'ROCK'
-                        default: return 'ROCK'
-                    }
-                }
-
-
                 if (pac.nearOpponentPac && pac.nearOpponentPac.distance < 4) {
                     const winingType: TypeId = getKillType(pac.nearOpponentPac.typeId)
                     if (pac.typeId === winingType) {
@@ -328,7 +329,11 @@ while (true) {
                 }
 
             } else {
-                output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${currentPellet.side}`
+
+                if (outputComment.length === 0) {
+                    outputComment = `${currentPellet.side}`
+                }
+                output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${outputComment}`
             }
 
             const history = currentPacs[pac.pacId]
