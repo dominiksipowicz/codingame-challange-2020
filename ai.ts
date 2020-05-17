@@ -36,22 +36,20 @@ interface Pac {
         x: Direction.LEFT | Direction.RIGHT
         y: Direction.UP | Direction.DOWN
     }
+    history?: Point[]
 }
 
 var inputs: string[] = readline().split(' ');
 const width: number = parseInt(inputs[0]); // size of the grid
 const height: number = parseInt(inputs[1]); // top left corner is (x=0, y=0)
 const map: string[] = []
-for (let i = 0; i < height; i++) {
-    const row: string = readline(); // one line of the grid: space " " is floor, pound "#" is wall
-    map.push(row)
-    console.error(row)
-}
-
-
-
 let currentPellet: Pellet
 let currentPacs: Pac[] = []
+
+for (let i = 0; i < height; i++) {
+    const row: string = readline(); // one line of the grid: space " " is floor, pound "#" is wall
+    map.push(row.replace(/\s/g, '?'))
+}
 
 // game loop
 while (true) {
@@ -102,6 +100,47 @@ while (true) {
     }
     const visiblePelletCount: number = parseInt(readline()); // all pellets in sight
 
+    const updateMazeWithVisualPelets = (pellet: Pellet) => {
+        const row = map[pellet.y]
+        const spot: string = pellet.value === 10 ? 'O' : 'o'
+        map[pellet.y] = row.substring(0, pellet.x) + spot + row.substring(pellet.x + 1);
+    }
+
+    const cleanMazeBasedOnPacsHistory = () => {
+        currentPacs
+            .forEach(pac => {
+                pac.history.forEach(point => {
+                    const row = map[point.y]
+                    const spot: string = ' '
+                    map[point.y] = row.substring(0, point.x) + spot + row.substring(point.x + 1);
+                })
+            })
+    }
+
+    const getNextPelletFromMaze = (pac: Pac): Pellet => {
+        const side: Side = (pac.pacId % 2 === 0) ? Side.LEFT : Side.RIGHT
+
+
+        let point: Pellet;
+
+        map.forEach((row, n) => {
+            row.split('').forEach((item, index) => {
+                if (side === calculateSide(index)) {
+                    if (item === 'O') {
+                        point = {x: index, y: n, value: 10}
+                        return
+                    }
+                    if (item === 'o') {
+                        point = {x: index, y: n, value: 1}
+                        return
+                    }
+                }
+            })
+        })
+
+        return point
+    }
+
     let pellets: Pellet[] = []
 
     for (let i = 0; i < visiblePelletCount; i++) {
@@ -113,6 +152,7 @@ while (true) {
             side: calculateSide(parseInt(inputs[0]))
         }
         pellets.push(pellet)
+        updateMazeWithVisualPelets(pellet)
     }
 
     const getSuperPellets = (pellets: Pellet[]) => {
@@ -194,9 +234,11 @@ while (true) {
             }
             if (isSamePosition(pac)) {
                 // console.error(findConflictedPacs(pac))
-                [...Array(3)].forEach(() => {
-                    currentPellet = getNextPellet(sortedPelletsPerPac)
-                })
+                // [...Array(3)].forEach(() => {
+                //     currentPellet = getNextPellet(sortedPelletsPerPac)
+                // })
+                cleanMazeBasedOnPacsHistory()
+                currentPellet = getNextPelletFromMaze(pac)
             }
 
             // console.error(currentPellet)
@@ -207,17 +249,24 @@ while (true) {
                 output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${currentPellet.side}`
             }
 
-
+            const history = currentPacs[pac.pacId]
+                ? currentPacs[pac.pacId].history
+                : []
 
             currentPacs[pac.pacId] = {
                 ...pac,
                 targetPellet: currentPellet,
                 side: calculateSide(pac.x),
-                direction: calculateDirection(pac, currentPellet)
+                direction: calculateDirection(pac, currentPellet),
+                history: [...history, {x: pac.x, y: pac.y }]
             }
         })
 
-     console.error(currentPacs)
+    //  console.error(currentPacs)
+
+    // // print maze
+    // cleanMazeBasedOnPacsHistory()
+    // map.forEach(i => console.error(i))
 
     console.log(output)
 
