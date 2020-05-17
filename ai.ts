@@ -22,12 +22,14 @@ interface Pellet {
     side?: Side
 }
 
+type TypeId = string | 'ROCK' | 'PAPER' | 'SCISSORS'
+
 interface Pac {
     pacId: number
     mine: boolean // true if this pac is yours
     x: number // position in the grid
     y: number
-    typeId: string | 'ROCK' | 'PAPER' | 'SCISSORS'  // unused in wood leagues
+    typeId: TypeId  // unused in wood leagues
     speedTurnsLeft: number // unused in wood leagues
     abilityCooldown: number // unused in wood leagues
     targetPellet?: Pellet
@@ -37,6 +39,15 @@ interface Pac {
         y: Direction.UP | Direction.DOWN
     }
     history?: Point[]
+    nearOpponentPac?: {
+        pacId: number
+        x: number
+        y: number
+        typeId: TypeId  // unused in wood leagues
+        side?: Side
+        vector: Point
+        distance: number
+    }
 }
 
 var inputs: string[] = readline().split(' ');
@@ -45,6 +56,7 @@ const height: number = parseInt(inputs[1]); // top left corner is (x=0, y=0)
 const map: string[] = []
 let currentPellet: Pellet
 let currentPacs: Pac[] = []
+let opponentPacs: Pac[] = []
 
 for (let i = 0; i < height; i++) {
     const row: string = readline(); // one line of the grid: space " " is floor, pound "#" is wall
@@ -97,7 +109,12 @@ while (true) {
             side: calculateSide(parseInt(inputs[2]))
         }
         pacs.push(pac)
+
+        if (!pac.mine && pac.pacId && pac) {
+            opponentPacs[pac.pacId] = pac
+        }
     }
+
     const visiblePelletCount: number = parseInt(readline()); // all pellets in sight
 
     const updateMazeWithVisualPelets = (pellet: Pellet) => {
@@ -247,8 +264,53 @@ while (true) {
 
             }
 
+            // update my packs with information about distance to the nearest opponent pac (plus set type)
+            if(opponentPacs.length) {
+                opponentPacs.forEach((opponentPac: Pac) => {
+                    const vector = calculateVector(pac.x, pac.y, opponentPac.x, opponentPac.y)
+                    const distance = calculateVectorLength(vector)
+                    if (
+                        !pac.nearOpponentPac
+                        || (pac.nearOpponentPac && pac.nearOpponentPac.distance > distance)
+                    ) {
+                        pac.nearOpponentPac = {
+                            pacId: opponentPac.pacId,
+                            x: opponentPac.x,
+                            y: opponentPac.y,
+                            typeId: opponentPac.typeId,
+                            vector: vector,
+                            distance: distance
+                        }
+                    }
+                })
+            }
+
             if (pac.speedTurnsLeft === 0 && pac.abilityCooldown === 0) {
-                output += `SPEED ${pac.pacId}`
+                // check for opponent pacs
+                // morph & attack :)
+
+                const getKillType = (typeId: TypeId): TypeId => {
+                    switch(typeId) {
+                        case 'ROCK': return 'PAPER'
+                        case 'PAPER': return 'SCISSORS'
+                        case 'SCISSORS': return 'ROCK'
+                        default: return 'ROCK'
+                    }
+                }
+
+
+                if (pac.nearOpponentPac && pac.nearOpponentPac.distance < 4) {
+                    const winingType: TypeId = getKillType(pac.nearOpponentPac.typeId)
+                    if (pac.typeId === winingType) {
+                        output += `MOVE ${pac.pacId} ${pac.nearOpponentPac.x} ${pac.nearOpponentPac.y} attack`
+                    } else {
+                        output += `SWITCH ${pac.pacId} ${winingType}`
+                    }
+                } else {
+                    // no enemy pacs around so maybe speed up? :)
+                    output += `SPEED ${pac.pacId}`
+                }
+
             } else {
                 output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${currentPellet.side}`
             }
@@ -268,7 +330,7 @@ while (true) {
             // console.error(findConflictedPacs(pac).map(x => ({...x, history: []})))
         })
 
-    //  console.error(currentPacs.map(x => ({...x, history: []})))
+     console.error(currentPacs.map(x => ({...x, history: []})))
 
     // // print maze
     // cleanMazeBasedOnPacsHistory()
