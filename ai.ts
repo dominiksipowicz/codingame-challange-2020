@@ -85,8 +85,8 @@ while (true) {
         return Math.sqrt(point.x * point.x + point.y * point.y);
     }
 
-    const calculateDirection = (pac: Pac, pellet: Pellet): any => {
-        const vector = calculateVector(pac.x, pac.y, pellet.x, pellet.y)
+    const calculateDirection = (pac: Pac, target: any): any => {
+        const vector = calculateVector(pac.x, pac.y, target.x, target.y)
         return {
             x: vector.x > 0 ? Direction.RIGHT : Direction.LEFT,
             y: vector.y > 0 ? Direction.DOWN : Direction.UP,
@@ -207,8 +207,9 @@ while (true) {
     const findConflictedPacs = (pac:Pac): Pac[] => {
         return currentPacs
             // .filter(item => item.pacId != pac.pacId) // remove original to compare to
+            .filter(isSamePosition)
             .filter(item => {
-                return pac.x <= item.x+2 && pac.x >= item.x-2 && pac.y <= item.y+2 && pac.y >= item.y-2
+                return pac.x <= item.x+1 && pac.x >= item.x-1 && pac.y <= item.y+1 && pac.y >= item.y-1
             })
     }
 
@@ -219,6 +220,36 @@ while (true) {
             case 'SCISSORS': return 'ROCK'
             default: return 'ROCK'
         }
+    }
+
+    const attack = (pac: Pac): string => {
+        // check for situation where pac atack phantom enemy pac
+        if (
+            currentPacs[pac.pacId].x === pac.nearOpponentPac.x
+            && currentPacs[pac.pacId].y === pac.nearOpponentPac.y
+            && pac.x === pac.nearOpponentPac.x
+            && pac.y === pac.nearOpponentPac.y
+        ) {
+            opponentPacs = opponentPacs.filter(item => item.pacId !== pac.nearOpponentPac.pacId)
+        }
+        return `MOVE ${pac.pacId} ${pac.nearOpponentPac.x} ${pac.nearOpponentPac.y} attack`
+    }
+
+    const runAway = (pac: Pac, from: any, returnPoint = false): string|Point => {
+        const direction = calculateDirection(pac, from)
+        let newX = direction.x === Direction.LEFT ? (pac.x - 3) : (pac.x + 3)
+        let newY = direction.y === Direction.LEFT ? (pac.y - 3) : (pac.y + 3)
+
+        if (newX < 1) newX = 1
+        if (newY < 1) newY = 1
+        if (newX >= width) newX = width  - 1
+        if (newY >= height) newY = height - 2
+
+        console.error('runaway pac: ' + pac.pacId + ` ${newX} ${newY}  ${returnPoint}`)
+        if (returnPoint) {
+            return { x: newX, y: newY }
+        }
+        return `MOVE ${pac.pacId} ${newX} ${newY} run`
     }
 
 /*
@@ -256,20 +287,32 @@ while (true) {
                 output += ` | `
             }
             if (isSamePosition(pac)) {
-                // console.error(findConflictedPacs(pac))
+                // console.error("same position")
                 // [...Array(3)].forEach(() => {
                 //     currentPellet = getNextPellet(sortedPelletsPerPac)
                 // })
                 currentPellet = getNextPelletFromMaze(pac)
 
-                const conflictedPac = findConflictedPacs(pac).filter(item => item.mine).pop()
+                const conflictedPacs = findConflictedPacs(pac)
+                if (conflictedPacs.length) {
+                    console.error("conflictedPacs")
+                    const conflictedPac = conflictedPacs.pop()
+                    if ( // in case the direction is still opposite (conflicting) choose same pellet
+                        conflictedPac.direction.x !== calculateDirection(pac, currentPellet).x ||
+                        conflictedPac.direction.y !== calculateDirection(pac, currentPellet).y
+                    ) {
+                        currentPellet = conflictedPac.targetPellet
+                    }
 
+                    if (pac.typeId === conflictedPac.typeId) {
+                        // console.error("same type collision")
+                        // very rare case that pellet is between my own packs
+                        currentPellet = {
+                            ...runAway(pac, conflictedPac, true) as Point,
+                            value: 5
+                        }
+                    }
 
-                if ( // in case the direction is still opposite (conflicting) choose same pellet
-                    conflictedPac.direction.x !== calculateDirection(pac, currentPellet).x ||
-                    conflictedPac.direction.y !== calculateDirection(pac, currentPellet).y
-                ) {
-                    currentPellet = conflictedPac.targetPellet
                 }
 
                 // console.error(findConflictedPacs(pac).map(x => ({...x, history: []})))
@@ -306,34 +349,47 @@ while (true) {
 
                 if (pac.nearOpponentPac && pac.nearOpponentPac.distance < 4) {
                     const winingType: TypeId = getKillType(pac.nearOpponentPac.typeId)
-                    if (pac.typeId === winingType) {
-                        output += `MOVE ${pac.pacId} ${pac.nearOpponentPac.x} ${pac.nearOpponentPac.y} attack`
-
-                        // check for situation where pac atack phantom enemy pac
-                        if (
-                            currentPacs[pac.pacId].x === pac.nearOpponentPac.x
-                            && currentPacs[pac.pacId].y === pac.nearOpponentPac.y
-                            && pac.x === pac.nearOpponentPac.x
-                            && pac.y === pac.nearOpponentPac.y
-                        ) {
-                            opponentPacs = opponentPacs.filter(item => item.pacId !== pac.nearOpponentPac.pacId)
-                        }
-
-
-                    } else {
+                    if (pac.typeId === winingType) { // attack the fucker
+                        output += attack(pac)
+                    } else { // morph
                         output += `SWITCH ${pac.pacId} ${winingType}`
                     }
                 } else {
-                    // no enemy pacs around so maybe speed up? :)
-                    output += `SPEED ${pac.pacId}`
+
+                    if (pac.nearOpponentPac && pac.nearOpponentPac.distance > 5 ) {
+                        // no enemy pacs around so maybe speed up? :)
+                        output += `SPEED ${pac.pacId}`
+                    } else {
+                        output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${outputComment}`
+                    }
                 }
 
             } else {
 
-                if (outputComment.length === 0) {
-                    outputComment = `${currentPellet.side}`
+                if (pac.nearOpponentPac && pac.nearOpponentPac.distance < 2) {
+                    const winingType: TypeId = getKillType(pac.nearOpponentPac.typeId)
+
+                    if (pac.typeId === winingType) { // attack the fucker
+                        output += attack(pac)
+                    }
+
+                    // TODO: this might be dangerous in future
+                    if (pac.typeId === pac.nearOpponentPac.typeId) { // same type
+                        output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${outputComment}`
+                    }
+
+                    if (getKillType(pac.typeId) === pac.nearOpponentPac.typeId) { // run away
+                        output += runAway(pac, pac.nearOpponentPac)
+                    }
+
+                } else {
+
+                    if (outputComment.length === 0) {
+                        outputComment = `${currentPellet.side}`
+                    }
+
+                    output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${outputComment}`
                 }
-                output += `MOVE ${pac.pacId} ${currentPellet.x} ${currentPellet.y} ${outputComment}`
             }
 
             const history = currentPacs[pac.pacId]
