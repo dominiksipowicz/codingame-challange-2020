@@ -110,9 +110,7 @@ while (true) {
         }
         pacs.push(pac)
 
-        if (!pac.mine && pac.pacId && pac) {
-            opponentPacs[pac.pacId] = pac
-        }
+        opponentPacs = pacs.filter(pac => !pac.mine)
     }
 
     const visiblePelletCount: number = parseInt(readline()); // all pellets in sight
@@ -229,6 +227,7 @@ while (true) {
         if (isSamePosition(pac) && calculateVectorLength(vector) <= 2) {
             console.error('fantom')
             opponentPacs = opponentPacs.filter(item => item.pacId !== pac.nearOpponentPac.pacId)
+            delete currentPacs[pac.pacId].nearOpponentPac
         }
         return `MOVE ${pac.pacId} ${pac.nearOpponentPac.x} ${pac.nearOpponentPac.y} attack`
     }
@@ -293,7 +292,7 @@ while (true) {
 
                 const conflictedPacs = findConflictedPacs(pac)
                 if (conflictedPacs.length) {
-                    console.error("conflictedPacs")
+                    // console.error("conflictedPacs")
                     const conflictedPac = conflictedPacs.pop()
                     if ( // in case the direction is still opposite (conflicting) choose same pellet
                         conflictedPac.direction.x !== calculateDirection(pac, currentPellet).x ||
@@ -312,11 +311,6 @@ while (true) {
                     }
 
                 }
-
-                // console.error(findConflictedPacs(pac).map(x => ({...x, history: []})))
-                // console.error(conflictedPac)
-                // console.error(currentPacs[pac.pacId])
-                // console.error(currentPellet)
 
             }
 
