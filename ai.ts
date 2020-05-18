@@ -234,8 +234,8 @@ while (true) {
 
     const runAway = (pac: Pac, from: any, returnPoint = false): string|Point => {
         const direction = calculateDirection(pac, from)
-        let newX = direction.x === Direction.LEFT ? (pac.x + 5) : (pac.x - 5) // TODO: double check
-        let newY = direction.y === Direction.DOWN ? (pac.y - 5) : (pac.y + 5)
+        let newX = direction.x === Direction.LEFT ? (pac.x + 4) : (pac.x - 4) // TODO: double check
+        let newY = direction.y === Direction.DOWN ? (pac.y - 4) : (pac.y + 4)
 
         if (newX < 1) newX = 1
         if (newY < 1) newY = 1
@@ -399,7 +399,7 @@ while (true) {
             // console.error(findConflictedPacs(pac).map(x => ({...x, history: []})))
         })
 
-    //  console.error(currentPacs.map(x => ({...x, history: []})))
+     // console.error(currentPacs.map(x => ({...x, history: []})))
 
     // // print maze
     // cleanMazeBasedOnPacsHistory()
