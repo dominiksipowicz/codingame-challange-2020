@@ -225,7 +225,7 @@ while (true) {
         const vector = calculateVector(pac.x, pac.y, pac.nearOpponentPac.x, pac.nearOpponentPac.y)
 
         if (isSamePosition(pac) && calculateVectorLength(vector) <= 2) {
-            console.error('fantom')
+            // console.error('fantom')
             opponentPacs = opponentPacs.filter(item => item.pacId !== pac.nearOpponentPac.pacId)
             delete currentPacs[pac.pacId].nearOpponentPac
         }
@@ -234,8 +234,8 @@ while (true) {
 
     const runAway = (pac: Pac, from: any, returnPoint = false): string|Point => {
         const direction = calculateDirection(pac, from)
-        let newX = direction.x === Direction.LEFT ? (pac.x + 3) : (pac.x - 3) // TODO: double check
-        let newY = direction.y === Direction.DOWN ? (pac.y - 3) : (pac.y + 3)
+        let newX = direction.x === Direction.LEFT ? (pac.x + 5) : (pac.x - 5) // TODO: double check
+        let newY = direction.y === Direction.DOWN ? (pac.y - 5) : (pac.y + 5)
 
         if (newX < 1) newX = 1
         if (newY < 1) newY = 1
@@ -339,7 +339,7 @@ while (true) {
                 // check for opponent pacs
                 // morph & attack :)
 
-                if (pac.nearOpponentPac && pac.nearOpponentPac.distance < 4) {
+                if (pac.nearOpponentPac && pac.nearOpponentPac.distance < 5) {
                     const winingType: TypeId = getKillType(pac.nearOpponentPac.typeId)
                     if (pac.typeId === winingType) { // attack the fucker
                         output += attack(pac)
@@ -348,7 +348,7 @@ while (true) {
                     }
                 } else {
 
-                    if (pac.nearOpponentPac && pac.nearOpponentPac.distance > 5 ) {
+                    if (pac.nearOpponentPac && pac.nearOpponentPac.distance > 6 ) {
                         // no enemy pacs around so maybe speed up? :)
                         output += `SPEED ${pac.pacId}`
                     } else {
@@ -358,7 +358,7 @@ while (true) {
 
             } else {
 
-                if (pac.nearOpponentPac && pac.nearOpponentPac.distance < 2) {
+                if (pac.nearOpponentPac && pac.nearOpponentPac.distance <3) {
                     const winingType: TypeId = getKillType(pac.nearOpponentPac.typeId)
 
                     if (pac.typeId === winingType) { // attack the fucker
