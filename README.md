@@ -4,6 +4,7 @@ At the beginning of May, *codingame* held the **CodinGame Spring Challenge 2020*
 
 [![Watch the video](https://img.youtube.com/vi/63iMGOS6_u0/maxresdefault.jpg)](https://youtu.be/63iMGOS6_u0)
 
+
 ## My profile, rank and battles
 
 ![codingame_rank](https://user-images.githubusercontent.com/1570963/84146044-ea1c8800-aa52-11ea-9fd1-7141183e04fa.jpg)
